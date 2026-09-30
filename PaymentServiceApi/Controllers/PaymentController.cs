@@ -25,6 +25,13 @@ public class PaymentController : ControllerBase
         return Ok(payments.Select(PaymentResultResponse.FromModel).ToList());
     }
 
+    [HttpGet("count")]
+    public async Task<ActionResult<int>> Count(CancellationToken cancellationToken)
+    {
+        var payments = await _repository.GetAllAsync(cancellationToken);
+        return Ok(payments.Count);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PaymentResultResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {

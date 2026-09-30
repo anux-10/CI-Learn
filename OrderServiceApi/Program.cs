@@ -35,6 +35,6 @@ using (var scope = app.Services.CreateScope())
 
 app.MapControllers();
 
-app.MapGet("/", () => "OrderServiceApi is running!");
+app.MapGet("/", () => "OrderServiceApi is running! v2");
 
 app.Run();
