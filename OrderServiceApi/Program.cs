@@ -7,10 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(option =>
 {
-    
+
     option.JsonSerializerOptions.IgnoreNullValues = true;
     option.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-    
+
 });
 builder.Services.AddEndpointsApiExplorer();
 
