@@ -32,6 +32,13 @@ public class PaymentController : ControllerBase
         return Ok(payments.Count);
     }
 
+    [HttpGet("by-order/{orderId}")]
+    public async Task<ActionResult<List<PaymentResultResponse>>> GetByOrderId(string orderId, CancellationToken cancellationToken)
+    {
+        var payments = await _repository.GetByOrderIdAsync(orderId, cancellationToken);
+        return Ok(payments.Select(PaymentResultResponse.FromModel).ToList());
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PaymentResultResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {
