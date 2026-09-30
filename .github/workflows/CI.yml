@@ -1,0 +1,99 @@
+name: Continuous Integration Workflow
+
+# This workflow is triggered whenever a new PR is created on the main branch
+on:
+  pull_request:
+    branches:
+      - main
+
+defaults:
+  run:
+    shell: bash
+    # Define the working directory for all run steps in the workflow
+    working-directory: .
+
+jobs:
+  # Run unit tests to make sure everything is 👍
+  test:
+    name: 'Run unit tests'
+    # Specify the OS we want the workflow to run on
+    runs-on: ubuntu-latest
+    # Define the steps for this job
+    steps:
+      - uses: actions/checkout@v4
+        name: 'Checkout repository'
+
+      - name: 'Setup .NET'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: 'Restore Dependencies'
+        run: dotnet restore OrderPaymentService.sln
+
+      - name: 'Build'
+        run: dotnet build OrderPaymentService.sln --no-restore
+
+      - name: 'Run Tests'
+        run: dotnet test OrderPaymentService.sln --no-build --verbosity normal
+
+  # Run the linter to check for code style issues
+  lint:
+    name: 'Run linter'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: 'Checkout repository'
+
+      - name: 'Setup .NET'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: 'Restore Dependencies'
+        run: dotnet restore OrderPaymentService.sln
+
+      - name: 'Check formatting'
+        run: dotnet format OrderPaymentService.sln --verify-no-changes --verbosity diagnostic
+
+  # Deploy the current branch to staging
+  deploy:
+    environment: staging
+    name: 'Deploy to staging'
+    runs-on: ubuntu-latest
+    # Requires the test and lint jobs to be completed successfully before deploying
+    needs: ['test', 'lint']
+    steps:
+      - uses: actions/checkout@v4
+        name: 'Checkout repository'
+
+      - name: 'Setup .NET'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: 'Publish OrderService'
+        run: dotnet publish OrderServiceApi/OrderServiceApi.csproj -c Release -o ./publish/order
+
+      - name: 'Publish PaymentService'
+        run: dotnet publish PaymentServiceApi/PaymentServiceApi.csproj -c Release -o ./publish/payment
+
+      - uses: burnett01/rsync-deployments@master
+        name: 'Deploy to staging'
+        with:
+          switches: -avzr --delete
+          path: ./publish/
+          remote_path: /var/app
+          remote_host: ${{ secrets.HOSTNAME }}
+          remote_user: ${{ secrets.REMOTE_USER }}
+          remote_key: ${{ secrets.SSH_KEY }}
+
+      - uses: JimCronqvist/action-ssh@7737f1192ddd8376686e9d6354dea44592c942bf
+        name: Execute SSH commands on remote server
+        with:
+          hosts: '${{ secrets.REMOTE_USER }}@${{ secrets.HOSTNAME }}'
+          privateKey: ${{ secrets.SSH_KEY }}
+          command: |
+            cd /var/app
+            docker compose up -d --build
+            sudo service nginx restart
