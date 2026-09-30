@@ -23,6 +23,13 @@ public class OrdersController : ControllerBase
         return Ok(orders);
     }
 
+    [HttpGet("count")]
+    public async Task<ActionResult<int>> Count(CancellationToken cancellationToken)
+    {
+        var orders = await _orderService.GetAllAsync(cancellationToken);
+        return Ok(orders.Count);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<OrderResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {
