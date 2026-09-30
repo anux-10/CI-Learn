@@ -1,0 +1,21 @@
+@base = http://localhost:5093
+
+### Health
+GET {{base}}/
+
+### Get all payments
+GET {{base}}/payment
+Accept: application/json
+
+### Process payment
+POST {{base}}/payment/process
+Content-Type: application/json
+
+{
+  "orderId": "11111111-1111-1111-1111-111111111111",
+  "amount": "89.48",
+  "paymentMethod": "CreditCard",
+  "cardNumber": "4111111111111111",
+  "cardNameHolder": "Test User",
+  "currency": "USD"
+}
