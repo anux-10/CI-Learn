@@ -21,6 +21,6 @@ using (var scope = app.Services.CreateScope())
 
 app.MapControllers();
 
-app.MapGet("/", () => "PaymentServiceApi is running! v2");
+app.MapGet("/", () => "PaymentServiceApi is running! v3");
 
 app.Run();

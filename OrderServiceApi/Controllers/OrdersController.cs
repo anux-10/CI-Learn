@@ -37,6 +37,13 @@ public class OrdersController : ControllerBase
         return Ok(orders.Where(o => o.PaidAt.HasValue).ToList());
     }
 
+    [HttpGet("unpaid")]
+    public async Task<ActionResult<List<OrderResponse>>> GetUnpaid(CancellationToken cancellationToken)
+    {
+        var orders = await _orderService.GetAllAsync(cancellationToken);
+        return Ok(orders.Where(o => !o.PaidAt.HasValue).ToList());
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<OrderResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {
